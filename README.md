@@ -32,6 +32,8 @@ Important fields:
 - `AWS_MONTHLY_BUDGET`: optional, used for the executive budget comparison
 - `AWS_COST_TAG_KEY`: your environment tag, for example `Environment`
 - `AWS_UNIT_COUNT` and `AWS_UNIT_COUNT_PREVIOUS`: optional business volume numbers if you want unit-cost KPIs
+- `AUTH_USERNAME` and `AUTH_PASSWORD`: credentials for the built-in app login
+- `SESSION_SECRET`: long random secret used to protect session cookies
 
 3. Start the dashboard server:
 
@@ -94,4 +96,5 @@ This repo includes [`render.yaml`](/Users/patrickkong/codex/AWS-Cost/render.yaml
 Important:
 
 - Without AWS credentials, the deployed app will still work, but it will use sample cost data.
+- Authentication is enforced only when `AUTH_USERNAME` and `AUTH_PASSWORD` are configured. Set those in Render to require sign-in.
 - The current incident and service storage uses a local JSON file. On most cloud platforms, including simple web-service deployments, local filesystem writes are not durable across redeploys or restarts. For production persistence, move that data into a database such as Render Postgres.

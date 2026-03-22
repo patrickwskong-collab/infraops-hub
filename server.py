@@ -1,10 +1,15 @@
 import calendar
+import hashlib
+import hmac
 import json
 import os
+import secrets
 from datetime import date, datetime
 from functools import lru_cache
+from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from time import time
 
 try:
     import boto3
@@ -52,6 +57,13 @@ AWS_COST_TAG_KEY = os.getenv("AWS_COST_TAG_KEY", "Environment")
 AWS_MONTHLY_BUDGET = os.getenv("AWS_MONTHLY_BUDGET")
 AWS_UNIT_COUNT = os.getenv("AWS_UNIT_COUNT")
 AWS_UNIT_COUNT_PREVIOUS = os.getenv("AWS_UNIT_COUNT_PREVIOUS")
+AUTH_USERNAME = os.getenv("AUTH_USERNAME")
+AUTH_PASSWORD = os.getenv("AUTH_PASSWORD")
+SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-in-production")
+SESSION_COOKIE_NAME = "infraops_session"
+SESSION_DURATION_SECONDS = 60 * 60 * 12
+AUTH_ENABLED = bool(AUTH_USERNAME and AUTH_PASSWORD)
+SESSIONS = {}
 FORECAST_METRIC_MAP = {
     "BlendedCost": "BLENDED_COST",
     "UnblendedCost": "UNBLENDED_COST",
@@ -194,6 +206,63 @@ def get_forecast_amount(ce, today: date, next_month: date, fallback_amount: floa
 
 def format_currency(value: float) -> str:
     return f"${value:,.0f}"
+
+
+def prune_sessions():
+    now = int(time())
+    expired = [token for token, payload in SESSIONS.items() if payload["expires_at"] <= now]
+    for token in expired:
+        SESSIONS.pop(token, None)
+
+
+def hash_session_token(token: str) -> str:
+    return hmac.new(SESSION_SECRET.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def create_session(username: str) -> str:
+    raw_token = secrets.token_urlsafe(32)
+    SESSIONS[hash_session_token(raw_token)] = {
+        "username": username,
+        "expires_at": int(time()) + SESSION_DURATION_SECONDS,
+    }
+    return raw_token
+
+
+def parse_cookies(handler) -> SimpleCookie:
+    cookie = SimpleCookie()
+    cookie.load(handler.headers.get("Cookie", ""))
+    return cookie
+
+
+def get_session(handler):
+    if not AUTH_ENABLED:
+        return {"username": "guest"}
+
+    prune_sessions()
+    cookie = parse_cookies(handler)
+    morsel = cookie.get(SESSION_COOKIE_NAME)
+    if not morsel:
+        return None
+
+    payload = SESSIONS.get(hash_session_token(morsel.value))
+    if not payload:
+        return None
+    return payload
+
+
+def clear_session(handler):
+    cookie = parse_cookies(handler)
+    morsel = cookie.get(SESSION_COOKIE_NAME)
+    if morsel:
+        SESSIONS.pop(hash_session_token(morsel.value), None)
+
+
+def require_session(handler) -> bool:
+    if get_session(handler):
+        return True
+
+    handler._send_json(401, {"error": "Authentication required."})
+    return False
 
 
 @lru_cache(maxsize=1)
@@ -427,13 +496,44 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _is_secure_request(self) -> bool:
+        return self.headers.get("X-Forwarded-Proto", "http") == "https"
+
+    def _send_cookie(self, token: str):
+        secure = "; Secure" if self._is_secure_request() else ""
+        self.send_header(
+            "Set-Cookie",
+            f"{SESSION_COOKIE_NAME}={token}; HttpOnly; Path=/; SameSite=Lax; Max-Age={SESSION_DURATION_SECONDS}{secure}",
+        )
+
+    def _clear_cookie(self):
+        secure = "; Secure" if self._is_secure_request() else ""
+        self.send_header(
+            "Set-Cookie",
+            f"{SESSION_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0{secure}",
+        )
+
     def _read_json_body(self):
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_body = self.rfile.read(content_length) if content_length else b"{}"
         return json.loads(raw_body.decode("utf-8"))
 
     def do_GET(self):
+        if self.path == "/api/session":
+            session = get_session(self)
+            self._send_json(
+                200,
+                {
+                    "authenticated": bool(session),
+                    "authEnabled": AUTH_ENABLED,
+                    "username": session["username"] if session else None,
+                },
+            )
+            return
+
         if self.path == "/api/cost-data":
+            if not require_session(self):
+                return
             try:
                 payload = fetch_cost_data()
                 self._send_json(200, payload)
@@ -448,6 +548,8 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             return
 
         if self.path == "/api/infra-ops-data":
+            if not require_session(self):
+                return
             try:
                 self._send_json(200, load_infra_ops_data())
             except Exception as error:  # pragma: no cover - manual runtime path
@@ -459,6 +561,9 @@ class DashboardHandler(SimpleHTTPRequestHandler):
     def do_PUT(self):
         if self.path != "/api/infra-ops-data":
             self._send_json(404, {"error": "Not found"})
+            return
+
+        if not require_session(self):
             return
 
         try:
@@ -476,6 +581,52 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self._send_json(400, {"error": str(error)})
         except Exception as error:  # pragma: no cover - manual runtime path
             self._send_json(500, {"error": str(error)})
+
+    def do_POST(self):
+        if self.path != "/api/session":
+            self._send_json(404, {"error": "Not found"})
+            return
+
+        if not AUTH_ENABLED:
+            self._send_json(
+                400,
+                {"error": "Authentication is not configured. Set AUTH_USERNAME and AUTH_PASSWORD."},
+            )
+            return
+
+        try:
+            payload = self._read_json_body()
+            username = str(payload.get("username", "")).strip()
+            password = str(payload.get("password", ""))
+
+            if username != AUTH_USERNAME or password != AUTH_PASSWORD:
+                self._send_json(401, {"error": "Invalid username or password."})
+                return
+
+            token = create_session(username)
+            body = json.dumps({"authenticated": True, "authEnabled": True, "username": username}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self._send_cookie(token)
+            self.end_headers()
+            self.wfile.write(body)
+        except Exception as error:  # pragma: no cover - manual runtime path
+            self._send_json(500, {"error": str(error)})
+
+    def do_DELETE(self):
+        if self.path != "/api/session":
+            self._send_json(404, {"error": "Not found"})
+            return
+
+        clear_session(self)
+        body = json.dumps({"status": "ok"}).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self._clear_cookie()
+        self.end_headers()
+        self.wfile.write(body)
 
 
 def main():

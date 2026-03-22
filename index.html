@@ -13,7 +13,32 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div id="auth-shell" class="auth-shell">
+      <div class="auth-card">
+        <p class="eyebrow">Secure Access</p>
+        <h1>Sign in to InfraOps Hub</h1>
+        <p class="sidebar-copy">
+          Use your app credentials to access infrastructure cost, incidents, service ownership,
+          and weekly reporting.
+        </p>
+        <form id="login-form" class="editor-form auth-form">
+          <label>
+            <span>Username</span>
+            <input name="username" type="text" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="login-error" class="auth-error"></p>
+          <div class="form-actions">
+            <button class="ghost-button" type="submit">Sign In</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="app-shell is-hidden" id="app-shell">
       <aside class="sidebar">
         <div class="brand-block">
           <p class="eyebrow">Infrastructure Leadership</p>
@@ -50,6 +75,9 @@
             <div class="save-pill" id="save-status">Loading workspace data</div>
             <button class="ghost-button" type="button" id="weekly-summary-button">
               Generate Weekly Summary
+            </button>
+            <button class="ghost-button ghost-button-secondary" type="button" id="logout-button">
+              Log Out
             </button>
           </div>
         </header>
@@ -149,7 +177,7 @@
           </div>
         </section>
 
-        <section id="incidents" class="screen-section">
+        <section id="incidents" class="screen-section screen-block" data-screen="incidents">
           <div class="screen-header">
             <div>
               <p class="section-label">Incidents Screen</p>
@@ -245,7 +273,7 @@
           </div>
         </section>
 
-        <section id="services" class="screen-section">
+        <section id="services" class="screen-section screen-block" data-screen="services">
           <div class="screen-header">
             <div>
               <p class="section-label">Services Screen</p>
@@ -320,7 +348,7 @@
           </div>
         </section>
 
-        <section id="cost" class="screen-section">
+        <section id="cost" class="screen-section screen-block" data-screen="cost">
           <div class="screen-header">
             <div>
               <p class="section-label">Cost Screen</p>
@@ -361,7 +389,7 @@
           </div>
         </section>
 
-        <section id="weekly-report" class="screen-section">
+        <section id="weekly-report" class="screen-section screen-block" data-screen="weekly-report">
           <div class="screen-header">
             <div>
               <p class="section-label">Weekly Report Screen</p>
@@ -387,7 +415,7 @@
           </article>
         </section>
 
-        <section id="admin" class="screen-section">
+        <section id="admin" class="screen-section screen-block" data-screen="admin">
           <div class="screen-header">
             <div>
               <p class="section-label">Admin Screen</p>

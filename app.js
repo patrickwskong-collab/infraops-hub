@@ -53,6 +53,9 @@ const state = {
   selectedIncidentId: null,
   selectedServiceName: null,
   saveStatus: "Loading workspace data",
+  authEnabled: true,
+  authenticated: false,
+  username: "",
 };
 
 const formatMoney = (value) => currency.format(value);
@@ -176,6 +179,24 @@ const getSelectedService = () =>
   state.opsData.services[0] ||
   null;
 
+const renderAuthState = () => {
+  const authShell = document.querySelector("#auth-shell");
+  const appShell = document.querySelector("#app-shell");
+  const loginError = document.querySelector("#login-error");
+  const saveStatus = document.querySelector("#save-status");
+
+  authShell?.classList.toggle("is-hidden", state.authenticated || !state.authEnabled);
+  appShell?.classList.toggle("is-hidden", !state.authenticated && state.authEnabled);
+
+  if (loginError) {
+    loginError.textContent = "";
+  }
+
+  if (saveStatus && state.authenticated) {
+    saveStatus.textContent = state.saveStatus;
+  }
+};
+
 const renderScreenVisibility = () => {
   document.querySelectorAll("[data-screen]").forEach((section) => {
     section.classList.toggle("is-hidden", section.dataset.screen !== state.currentScreen);
@@ -193,7 +214,7 @@ const renderScreenVisibility = () => {
 
 const renderSaveStatus = () => {
   const saveStatus = document.querySelector("#save-status");
-  if (saveStatus) {
+  if (saveStatus && state.authenticated) {
     saveStatus.textContent = state.saveStatus;
   }
 };
@@ -645,6 +666,7 @@ const renderOpsViews = () => {
 };
 
 const renderApp = () => {
+  renderAuthState();
   renderScreenVisibility();
   renderSaveStatus();
   renderSourceNotice();
@@ -668,6 +690,12 @@ const saveOpsData = async () => {
     body: JSON.stringify(state.opsData),
   });
 
+  if (response.status === 401) {
+    state.authenticated = false;
+    renderAuthState();
+    throw new Error("Your session expired. Please sign in again.");
+  }
+
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new Error(payload.error || "Unable to save changes.");
@@ -677,9 +705,20 @@ const saveOpsData = async () => {
   renderSaveStatus();
 };
 
+const fetchSession = async () => {
+  const response = await fetch("./api/session");
+  if (!response.ok) {
+    throw new Error("Unable to check authentication session.");
+  }
+  return response.json();
+};
+
 const fetchCostData = async () => {
   try {
     const liveResponse = await fetch("./api/cost-data");
+    if (liveResponse.status === 401) {
+      throw new Error("AUTH_REQUIRED");
+    }
     if (liveResponse.ok) {
       const payload = await liveResponse.json();
       return { data: payload, source: "live" };
@@ -694,6 +733,9 @@ const fetchCostData = async () => {
 
 const fetchOpsData = async () => {
   const response = await fetch("./api/infra-ops-data");
+  if (response.status === 401) {
+    throw new Error("AUTH_REQUIRED");
+  }
   if (!response.ok) {
     throw new Error("Unable to load incident and service data.");
   }
@@ -815,19 +857,73 @@ const bindActions = () => {
       renderSaveStatus();
     }
   });
+
+  document.querySelector("#logout-button")?.addEventListener("click", async () => {
+    await fetch("./api/session", { method: "DELETE" }).catch(() => null);
+    state.authenticated = false;
+    state.username = "";
+    renderAuthState();
+  });
 };
 
-const init = async () => {
+const bindAuth = () => {
+  document.querySelector("#login-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const loginError = document.querySelector("#login-error");
+    const formData = new FormData(event.currentTarget);
+    const credentials = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("./api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        loginError.textContent = payload.error || "Unable to sign in.";
+        return;
+      }
+
+      state.authenticated = true;
+      state.authEnabled = payload.authEnabled !== false;
+      state.username = payload.username || "";
+      state.saveStatus = "All changes saved";
+      await loadAppData();
+      renderApp();
+      event.currentTarget.reset();
+    } catch (error) {
+      loginError.textContent = error.message;
+    }
+  });
+};
+
+const loadAppData = async () => {
   const [{ data, source }, opsData] = await Promise.all([fetchCostData(), fetchOpsData()]);
   state.costData = data;
   state.source = source;
   state.opsData = opsData;
   state.selectedIncidentId = opsData.incidents[0]?.id || null;
   state.selectedServiceName = opsData.services[0]?.name || null;
-  state.saveStatus = "All changes saved";
+};
 
+const init = async () => {
+  const session = await fetchSession();
+  state.authEnabled = session.authEnabled !== false;
+  state.authenticated = session.authenticated || !state.authEnabled;
+  state.username = session.username || "";
   bindNavigation();
+  bindAuth();
   bindActions();
+
+  if (!state.authenticated) {
+    renderAuthState();
+    return;
+  }
+
+  await loadAppData();
+  state.saveStatus = "All changes saved";
   renderApp();
 };
 
