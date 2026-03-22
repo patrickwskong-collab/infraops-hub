@@ -600,7 +600,7 @@ const renderSpendChart = (history) => {
   const dots = points
     .map(
       (point) => `
-      <circle cx="${point.x}" cy="${point.y}" r="5.5" fill="#fffaf3" stroke="#b7562d" stroke-width="3" />
+      <circle cx="${point.x}" cy="${point.y}" r="5.5" fill="#f6fff8" stroke="#00b140" stroke-width="3" />
       <text x="${point.x}" y="${point.y - 14}" text-anchor="middle" fill="#1f1c18" font-size="12" font-weight="600">
         ${formatMoneySafe(point.value)}
       </text>
@@ -611,8 +611,8 @@ const renderSpendChart = (history) => {
   svg.innerHTML = `
     <defs>
       <linearGradient id="areaFill" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="rgba(183,86,45,0.34)" />
-        <stop offset="100%" stop-color="rgba(183,86,45,0.05)" />
+        <stop offset="0%" stop-color="rgba(0,177,64,0.34)" />
+        <stop offset="100%" stop-color="rgba(0,177,64,0.05)" />
       </linearGradient>
     </defs>
     ${gridLines}
@@ -620,7 +620,7 @@ const renderSpendChart = (history) => {
     <path
       d="${linePath}"
       fill="none"
-      stroke="#b7562d"
+      stroke="#00b140"
       stroke-linecap="round"
       stroke-linejoin="round"
       stroke-width="4"
