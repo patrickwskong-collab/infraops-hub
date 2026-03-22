@@ -1,0 +1,106 @@
+{
+  "summary": {
+    "currentMonthSpend": 482000,
+    "previousMonthSpend": 451000,
+    "monthOverMonthPct": 6.9,
+    "forecast": 505000,
+    "budget": 520000,
+    "forecastVariancePct": 2.9,
+    "savingsOpportunity": 64000,
+    "savingsPlanCoverage": 0.72,
+    "unitCost": 18,
+    "unitCostDeltaPct": -4.4,
+    "unallocatedSpendPct": 0.08,
+    "unallocatedSpendDeltaPct": -1.1,
+    "anomalyWatch": "RDS I/O spike",
+    "largestDriver": "Data platform"
+  },
+  "monthlyHistory": [
+    { "month": "Oct", "value": 398000 },
+    { "month": "Nov", "value": 421000 },
+    { "month": "Dec", "value": 438000 },
+    { "month": "Jan", "value": 447000 },
+    { "month": "Feb", "value": 451000 },
+    { "month": "Mar", "value": 482000 }
+  ],
+  "topServices": [
+    {
+      "label": "Amazon EC2",
+      "value": 168000,
+      "meta": "Compute remains the largest driver; rightsizing idle non-prod instances is the fastest win."
+    },
+    {
+      "label": "Amazon RDS",
+      "value": 94000,
+      "meta": "Storage and I/O rose after analytics workload expansion."
+    },
+    {
+      "label": "Amazon S3",
+      "value": 72000,
+      "meta": "Tiering policy opportunity for backup and log buckets."
+    },
+    {
+      "label": "AWS Data Transfer",
+      "value": 61000,
+      "meta": "Cross-region traffic continues to climb with customer growth."
+    },
+    {
+      "label": "Amazon EKS",
+      "value": 52000,
+      "meta": "Cluster baseline stable; node pool utilization can improve."
+    }
+  ],
+  "environments": [
+    {
+      "label": "Production",
+      "value": 0.67,
+      "meta": "Healthy alignment with revenue-generating workloads."
+    },
+    {
+      "label": "Staging",
+      "value": 0.18,
+      "meta": "Worth reviewing underused always-on environments."
+    },
+    {
+      "label": "Development",
+      "value": 0.15,
+      "meta": "Good candidate for scheduling and policy enforcement."
+    }
+  ],
+  "accounts": [
+    {
+      "label": "Digital Products",
+      "value": 223000,
+      "meta": "Primary customer-facing applications and APIs."
+    },
+    {
+      "label": "Data Platform",
+      "value": 149000,
+      "meta": "Largest month-over-month increase due to analytics scale-up."
+    },
+    {
+      "label": "Shared Services",
+      "value": 61000,
+      "meta": "Observability, identity, networking, and CI/CD foundations."
+    },
+    {
+      "label": "Sandbox",
+      "value": 49000,
+      "meta": "Governance needed to cap experimentation costs."
+    }
+  ],
+  "insights": [
+    {
+      "title": "Spend is rising, but still inside budget",
+      "body": "Current forecast lands below budget, so the focus can stay on efficiency instead of emergency reduction."
+    },
+    {
+      "title": "Data workloads are the main growth story",
+      "body": "RDS, S3, and transfer costs indicate analytics demand is driving the latest increase more than core application compute."
+    },
+    {
+      "title": "Fastest savings are operational, not architectural",
+      "body": "Non-production scheduling, storage tiering, and savings plan expansion offer meaningful savings without delaying roadmap work."
+    }
+  ]
+}

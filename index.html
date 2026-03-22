@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InfraOps Hub Starter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <p class="eyebrow">Infrastructure Leadership</p>
+          <h1>InfraOps Hub</h1>
+          <p class="sidebar-copy">
+            Starter UI for cost, incidents, service ownership, and weekly reporting.
+          </p>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Primary">
+          <a href="#dashboard" class="nav-item active" data-screen-link="dashboard">Dashboard</a>
+          <a href="#incidents" class="nav-item" data-screen-link="incidents">Incidents</a>
+          <a href="#services" class="nav-item" data-screen-link="services">Services</a>
+          <a href="#cost" class="nav-item" data-screen-link="cost">Cost</a>
+          <a href="#weekly-report" class="nav-item" data-screen-link="weekly-report">Weekly Report</a>
+          <a href="#admin" class="nav-item" data-screen-link="admin">Admin</a>
+        </nav>
+
+        <section class="sidebar-panel">
+          <p class="mini-label">Leadership Prompt</p>
+          <strong id="leadership-focus">Loading...</strong>
+          <p id="leadership-note" class="subtle"></p>
+        </section>
+      </aside>
+
+      <main class="content-shell">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Internal Operations Console</p>
+            <h2>Head of Infrastructure Starter Screens</h2>
+          </div>
+          <div class="topbar-actions">
+            <div class="search-pill" id="screen-indicator">Dashboard</div>
+            <div class="save-pill" id="save-status">Loading workspace data</div>
+            <button class="ghost-button" type="button" id="weekly-summary-button">
+              Generate Weekly Summary
+            </button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="hero-grid screen-block" data-screen="dashboard">
+          <article class="hero-card hero-primary">
+            <p class="section-label">Executive Dashboard</p>
+            <div class="hero-main">
+              <div>
+                <h3>Operational health, spend, and risk in one leadership view.</h3>
+                <p class="hero-text">
+                  This starter keeps your AWS cost feed and layers in the app structure for
+                  incidents, service ownership, and reporting.
+                </p>
+              </div>
+              <div class="hero-kpis" id="headline-card"></div>
+            </div>
+          </article>
+
+          <article class="hero-card hero-secondary">
+            <p class="section-label">This Week</p>
+            <div id="weekly-brief" class="brief-list"></div>
+          </article>
+        </section>
+
+        <section class="screen-section screen-block" data-screen="dashboard">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Dashboard</p>
+              <h2>Command View</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel span-12">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Overview</p>
+                  <h3>Key Metrics</h3>
+                </div>
+              </div>
+              <div class="kpi-grid" id="kpi-grid"></div>
+            </article>
+
+            <article class="panel span-8">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Trend</p>
+                  <h3>Monthly Spend</h3>
+                </div>
+                <p class="panel-note">Last 6 months</p>
+              </div>
+              <div class="chart-shell">
+                <svg id="spend-chart" viewBox="0 0 720 280" aria-label="Monthly spend chart"></svg>
+              </div>
+            </article>
+
+            <article class="panel span-4">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Narrative</p>
+                  <h3>Leadership Notes</h3>
+                </div>
+              </div>
+              <div class="insight-list" id="insight-list"></div>
+            </article>
+
+            <article class="panel span-4">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Incidents</p>
+                  <h3>Active Queue</h3>
+                </div>
+              </div>
+              <div id="incident-summary" class="stack-list"></div>
+            </article>
+
+            <article class="panel span-4">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Ownership</p>
+                  <h3>Coverage Gaps</h3>
+                </div>
+              </div>
+              <div id="ownership-gaps" class="stack-list compact"></div>
+            </article>
+
+            <article class="panel span-4">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Risk</p>
+                  <h3>Open Risks</h3>
+                </div>
+              </div>
+              <div id="risk-list" class="stack-list compact"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="incidents" class="screen-section">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Incidents Screen</p>
+              <h2>Incident Tracker</h2>
+            </div>
+            <button class="ghost-button" type="button" id="new-incident-button">New Incident</button>
+          </div>
+
+          <div class="content-grid two-up">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">List View</p>
+                  <h3>All Incidents</h3>
+                </div>
+              </div>
+              <div class="table-shell">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Title</th>
+                      <th>Severity</th>
+                      <th>Owner</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="incident-table"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Detail View</p>
+                  <h3>Selected Incident</h3>
+                </div>
+              </div>
+              <div id="incident-detail" class="detail-stack"></div>
+              <form id="incident-form" class="editor-form">
+                <div class="form-grid">
+                  <label>
+                    <span>ID</span>
+                    <input name="id" type="text" required />
+                  </label>
+                  <label>
+                    <span>Title</span>
+                    <input name="title" type="text" required />
+                  </label>
+                  <label>
+                    <span>Severity</span>
+                    <select name="severity">
+                      <option>P1</option>
+                      <option>P2</option>
+                      <option>P3</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Status</span>
+                    <select name="status">
+                      <option>Investigating</option>
+                      <option>Monitoring</option>
+                      <option>Resolved</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Owner</span>
+                    <input name="owner" type="text" required />
+                  </label>
+                  <label>
+                    <span>Service</span>
+                    <input name="service" type="text" required />
+                  </label>
+                  <label>
+                    <span>Started At</span>
+                    <input name="startedAt" type="text" required />
+                  </label>
+                </div>
+                <label>
+                  <span>Summary</span>
+                  <textarea name="summary" rows="3" required></textarea>
+                </label>
+                <label>
+                  <span>Next Action</span>
+                  <textarea name="nextAction" rows="3" required></textarea>
+                </label>
+                <div class="form-actions">
+                  <button class="ghost-button" type="submit">Save Incident</button>
+                </div>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <section id="services" class="screen-section">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Services Screen</p>
+              <h2>Service Registry</h2>
+            </div>
+            <button class="ghost-button" type="button" id="new-service-button">Add Service</button>
+          </div>
+
+          <div class="content-grid two-up">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Directory</p>
+                  <h3>Service Ownership</h3>
+                </div>
+              </div>
+              <div id="services-list" class="stack-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Service Detail</p>
+                  <h3>Payments API</h3>
+                </div>
+              </div>
+              <div id="service-detail" class="detail-stack"></div>
+              <form id="service-form" class="editor-form">
+                <div class="form-grid">
+                  <label>
+                    <span>Name</span>
+                    <input name="name" type="text" required />
+                  </label>
+                  <label>
+                    <span>Environment</span>
+                    <select name="environment">
+                      <option>Production</option>
+                      <option>Staging</option>
+                      <option>Development</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Owner</span>
+                    <input name="owner" type="text" required />
+                  </label>
+                  <label>
+                    <span>Backup Owner</span>
+                    <input name="backupOwner" type="text" required />
+                  </label>
+                  <label>
+                    <span>Criticality</span>
+                    <select name="criticality">
+                      <option>Tier 0</option>
+                      <option>Tier 1</option>
+                      <option>Tier 2</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Open Incidents</span>
+                    <input name="openIncidents" type="number" min="0" />
+                  </label>
+                </div>
+                <label>
+                  <span>Operational Context</span>
+                  <textarea name="meta" rows="4" required></textarea>
+                </label>
+                <div class="form-actions">
+                  <button class="ghost-button" type="submit">Save Service</button>
+                </div>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <section id="cost" class="screen-section">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Cost Screen</p>
+              <h2>AWS Cost Overview</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel span-5">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Drivers</p>
+                  <h3>Top Services</h3>
+                </div>
+              </div>
+              <div id="cost-services-list" class="stack-list"></div>
+            </article>
+
+            <article class="panel span-3">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Exposure</p>
+                  <h3>Environment Mix</h3>
+                </div>
+              </div>
+              <div id="environment-list" class="stack-list compact"></div>
+            </article>
+
+            <article class="panel span-4">
+              <div class="panel-head">
+                <div>
+                  <p class="section-label">Accounts</p>
+                  <h3>Business Unit View</h3>
+                </div>
+              </div>
+              <div id="accounts-list" class="stack-list compact"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="weekly-report" class="screen-section">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Weekly Report Screen</p>
+              <h2>Leadership Summary Draft</h2>
+            </div>
+            <div class="topbar-actions">
+              <button class="ghost-button" type="button">Copy</button>
+              <button class="ghost-button" type="button">Export</button>
+            </div>
+          </div>
+
+          <article class="panel report-panel">
+            <div class="report-grid">
+              <div>
+                <p class="mini-label">Highlights</p>
+                <div id="report-highlights" class="brief-list"></div>
+              </div>
+              <div>
+                <p class="mini-label">Draft Summary</p>
+                <div id="report-body" class="report-body"></div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section id="admin" class="screen-section">
+          <div class="screen-header">
+            <div>
+              <p class="section-label">Admin Screen</p>
+              <h2>Integrations and Readiness</h2>
+            </div>
+          </div>
+
+          <div id="admin-cards" class="content-grid three-up"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

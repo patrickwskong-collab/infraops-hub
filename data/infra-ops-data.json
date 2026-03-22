@@ -1,0 +1,75 @@
+{
+  "incidents": [
+    {
+      "id": "INC-142",
+      "title": "Latency spike on payments API",
+      "severity": "P1",
+      "owner": "Nadia",
+      "status": "Investigating",
+      "service": "Payments API",
+      "startedAt": "08:12 UTC",
+      "summary": "Checkout response time breached the customer SLA in three regions.",
+      "nextAction": "Move traffic away from the overloaded node group and validate RDS connection pool recovery."
+    },
+    {
+      "id": "INC-139",
+      "title": "Kafka broker disk nearing threshold",
+      "severity": "P2",
+      "owner": "Rizal",
+      "status": "Monitoring",
+      "service": "Event Platform",
+      "startedAt": "Yesterday",
+      "summary": "Storage growth followed an ingestion backlog after a reporting batch rerun.",
+      "nextAction": "Complete retention policy cleanup and verify partition rebalance by end of day."
+    },
+    {
+      "id": "INC-134",
+      "title": "Internal VPN packet loss",
+      "severity": "P3",
+      "owner": "Mei",
+      "status": "Resolved",
+      "service": "Network Edge",
+      "startedAt": "2 days ago",
+      "summary": "Packet loss affected office-to-cloud routing during the WAN provider maintenance window.",
+      "nextAction": "Publish maintenance communication template before the next provider change."
+    }
+  ],
+  "services": [
+    {
+      "name": "Payments API",
+      "environment": "Production",
+      "owner": "Nadia",
+      "backupOwner": "Arjun",
+      "criticality": "Tier 0",
+      "openIncidents": 1,
+      "meta": "Runbook, dashboards, and repo are linked. Dependency chain includes Redis and RDS."
+    },
+    {
+      "name": "Event Platform",
+      "environment": "Production",
+      "owner": "Rizal",
+      "backupOwner": "Celine",
+      "criticality": "Tier 1",
+      "openIncidents": 1,
+      "meta": "Streaming backbone for order, billing, and audit events."
+    },
+    {
+      "name": "Identity Gateway",
+      "environment": "Production",
+      "owner": "Mei",
+      "backupOwner": "No backup owner",
+      "criticality": "Tier 0",
+      "openIncidents": 0,
+      "meta": "Missing backup owner is the main governance gap for this service."
+    },
+    {
+      "name": "Data Warehouse Sync",
+      "environment": "Staging",
+      "owner": "Unassigned",
+      "backupOwner": "Unassigned",
+      "criticality": "Tier 2",
+      "openIncidents": 0,
+      "meta": "Ownership needs to move from project setup into steady-state platform support."
+    }
+  ]
+}
