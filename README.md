@@ -1,14 +1,15 @@
-# AWS Cost Executive Dashboard
+# InfraOps Hub
 
-This is a lightweight executive dashboard for presenting AWS cost data. It now supports live AWS Cost Explorer data through a small local Python server, with the sample JSON file still available as a fallback.
+This is a lightweight internal operations dashboard for an infrastructure leader. It combines AWS cost visibility with starter workflows for incidents, service ownership, and weekly reporting. It supports live AWS Cost Explorer data through a small Python server, with sample JSON files still available as a fallback.
 
 ## What it includes
 
-- Executive headline with current spend, forecast, budget, and savings signals
-- KPI cards for spend growth, forecast variance, unit cost, and unallocated spend
-- A monthly spend trend chart
-- Top service, environment, and account breakdowns
-- Short leadership-ready narrative insights
+- Executive dashboard with cost, incident, ownership, and risk signals
+- Editable incident tracker with local persistence
+- Editable service registry with local persistence
+- Weekly leadership summary draft
+- AWS cost trend chart and cost breakdowns
+- Sample data fallback when live AWS data is unavailable
 
 ## Connect it to your AWS account
 
@@ -42,6 +43,8 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 If live AWS data is unavailable, the frontend automatically falls back to `/data/cost-data.json`.
 
+Incident and service edits are stored in `/data/infra-ops-data.json`.
+
 ## AWS prerequisites
 
 Your AWS identity needs Cost Explorer access, and Cost Explorer must already be enabled in the account.
@@ -56,6 +59,8 @@ For better environment breakdowns, make sure your cost allocation tag such as `E
 ## Sample-data fallback
 
 Edit `/data/cost-data.json` if you want to keep using manual data instead of live AWS data. The UI will still render from that file whenever the API is unavailable.
+
+Edit `/data/infra-ops-data.json` if you want to seed or reset the locally stored incidents and services.
 
 Useful source fields to export from AWS:
 
@@ -74,3 +79,19 @@ Useful source fields to export from AWS:
 - Add AWS Budgets API integration instead of a manual budget value
 - Add Savings Plans coverage and reservation utilization APIs
 - Export the view for leadership reporting
+- Move incident and service data to a real database
+
+## Deploy on Render
+
+This repo includes [`render.yaml`](/Users/patrickkong/codex/AWS-Cost/render.yaml) so you can deploy it as a Python web service directly from GitHub.
+
+1. Push your latest changes to GitHub.
+2. In Render, click `New +` then `Blueprint`.
+3. Connect your GitHub account and choose this repository.
+4. Render will detect `render.yaml` and create the web service.
+5. If you want live AWS cost data in production, add the same environment variables from `.env.example` in the Render dashboard.
+
+Important:
+
+- Without AWS credentials, the deployed app will still work, but it will use sample cost data.
+- The current incident and service storage uses a local JSON file. On most cloud platforms, including simple web-service deployments, local filesystem writes are not durable across redeploys or restarts. For production persistence, move that data into a database such as Render Postgres.
